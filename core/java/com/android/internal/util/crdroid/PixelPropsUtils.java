@@ -18,7 +18,9 @@
 package com.android.internal.util.crdroid;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.Build;
+import android.os.Binder;
 import android.os.SystemProperties;
 import android.util.Log;
 
@@ -366,6 +368,12 @@ public class PixelPropsUtils {
                 }
             }
         }
+    }
+
+    public static boolean shouldBypassTaskPermission(Context context) {
+        final int callingUid = Binder.getCallingUid();
+        final String callingPackage = context.getPackageManager().getNameForUid(callingUid);
+        return callingPackage != null && callingPackage.toLowerCase().contains("google");
     }
 
     private static void setPropValue(String key, Object value) {

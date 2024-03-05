@@ -2068,7 +2068,7 @@ public class WallpaperManagerService extends IWallpaperManager.Stub
         }
 
         if (which != FLAG_SYSTEM && which != FLAG_LOCK) {
-            throw new IllegalArgumentException("Must specify exactly one kind of wallpaper to clear");
+            return;
         }
 
         WallpaperData wallpaper = null;

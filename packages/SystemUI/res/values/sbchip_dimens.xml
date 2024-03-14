@@ -13,4 +13,7 @@
 -->
 <resources>
     <dimen name="chip_corner_radius">28dp</dimen>
+    <dimen name="status_bar_clock_chip_tb_padding">2dp</dimen>
+    <dimen name="status_bar_clock_chip_left_padding">6dp</dimen>
+    <dimen name="status_bar_clock_chip_right_padding">4dp</dimen>
 </resources>

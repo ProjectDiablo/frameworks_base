@@ -24,11 +24,14 @@ import android.telephony.SubscriptionManager;
 import android.util.ArrayMap;
 import android.util.IndentingPrintWriter;
 import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import androidx.annotation.VisibleForTesting;
 import androidx.core.animation.Animator;
@@ -153,7 +156,11 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private final KeyguardUpdateMonitor mKeyguardUpdateMonitor;
 
     private ClockController mClockController;
+
     private int mShowSBClockBg;
+    private int[] mClockPaddingStartArray = new int[3];
+    private int[] mClockPaddingEndArray = new int[3];
+
     private StatusIconContainer mStatusIcons;
     private int mSignalClusterEndPadding = 0;
 
@@ -448,36 +455,63 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     }
 
     private void updateStatusBarClock() {
-        if (mShowSBClockBg != 0) {
-            String chipStyleUri = "sb_date_bg" + String.valueOf(mShowSBClockBg);
-            int resId = getContext().getResources().getIdentifier(chipStyleUri, "drawable", "com.android.systemui");
-            mClockView.setBackgroundResource(resId);
-            mClockView.setPadding(12,4,12,4);
-            mClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            mCenterClockView.setBackgroundResource(resId);
-            mCenterClockView.setPadding(12,4,12,4);
-            mCenterClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            mRightClockView.setBackgroundResource(resId);
-            mRightClockView.setPadding(12,4,12,4);
-            mRightClockView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        } else {
-            int clockPaddingStart = getResources().getDimensionPixelSize(
-                    R.dimen.status_bar_clock_starting_padding);
-            int clockPaddingEnd = getResources().getDimensionPixelSize(
-                    R.dimen.status_bar_clock_end_padding);
-            int leftClockPaddingStart = getResources().getDimensionPixelSize(
-                    R.dimen.status_bar_left_clock_starting_padding);
-            int leftClockPaddingEnd = getResources().getDimensionPixelSize(
-                    R.dimen.status_bar_left_clock_end_padding);
-            mClockView.setBackgroundResource(0);
-            mClockView.setPaddingRelative(leftClockPaddingStart, 0, leftClockPaddingEnd, 0);
-            mCenterClockView.setBackgroundResource(0);
-            mCenterClockView.setPaddingRelative(0,0,0,0);
-            mRightClockView.setBackgroundResource(0);
-            mRightClockView.setPaddingRelative(clockPaddingStart, 0, clockPaddingEnd, 0);
-            mClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-            mCenterClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-            mRightClockView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+        View[] clockViews = {mClockView, mCenterClockView, mRightClockView};
+        for (int i = 0; i < clockViews.length; i++) {
+            View clockView = clockViews[i];
+            if (clockView == null) continue;
+            ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) clockView.getLayoutParams();
+            TextView textView = (TextView) clockView;
+            if (mShowSBClockBg > 0) {
+                mClockPaddingStartArray[i] = clockView.getPaddingStart();
+                mClockPaddingEndArray[i] = clockView.getPaddingEnd();
+                String chipStyleUri = "sb_date_bg" + mShowSBClockBg;
+                int resId = getContext().getResources().getIdentifier(chipStyleUri, "drawable", getContext().getPackageName());
+                int chipTopBottomPadding = getResources().getDimensionPixelSize(R.dimen.status_bar_clock_chip_tb_padding);
+                int chipLeftPadding = getResources().getDimensionPixelSize(R.dimen.status_bar_clock_chip_left_padding);
+                int chipRightPadding = getResources().getDimensionPixelSize(R.dimen.status_bar_clock_chip_right_padding);
+                clockView.setPadding(chipLeftPadding, chipTopBottomPadding, chipRightPadding, chipTopBottomPadding);
+                layoutParams.setMarginStart(mClockPaddingStartArray[i]);
+                layoutParams.setMarginEnd(mClockPaddingEndArray[i]);
+                if (clockView instanceof TextView) {
+                    textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                }
+                if (clockView.getParent() instanceof RelativeLayout) {
+                    RelativeLayout parentLayout = (RelativeLayout) clockView.getParent();
+                    parentLayout.setGravity(Gravity.CENTER);
+                } else if (clockView.getParent() instanceof LinearLayout) {
+                    LinearLayout parentLayout = (LinearLayout) clockView.getParent();
+                    parentLayout.setGravity(Gravity.CENTER);
+                }
+                clockView.setBackgroundResource(resId);
+            } else {
+                clockView.setBackgroundResource(0);
+                layoutParams.setMarginStart(0);
+                layoutParams.setMarginEnd(0);
+                clockView.setPaddingRelative(mClockPaddingStartArray[i], 0, mClockPaddingEndArray[i], 0);
+                if (clockView instanceof TextView) {
+                    if (textView.getId() == R.id.clock) {
+                        textView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+                    } else if (textView.getId() == R.id.clock_center) {
+                        textView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    } else if (textView.getId() == R.id.clock_right) {
+                        textView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+                    }
+                }
+                if (clockView.getParent() instanceof RelativeLayout) {
+                    RelativeLayout parentLayout = (RelativeLayout) clockView.getParent();
+                    if (parentLayout.getId() == R.id.left_clock_layout) {
+                        parentLayout.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+                    } else if (parentLayout.getId() == R.id.right_clock_layout) {
+                        parentLayout.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+                    } else {
+                        parentLayout.setGravity(Gravity.CENTER_VERTICAL);
+                    }
+                } else if (clockView.getParent() instanceof LinearLayout) {
+                    LinearLayout parentLayout = (LinearLayout) clockView.getParent();
+                    parentLayout.setGravity(Gravity.CENTER_VERTICAL);
+                }
+            }
+            clockView.setLayoutParams(layoutParams);
         }
     }
 

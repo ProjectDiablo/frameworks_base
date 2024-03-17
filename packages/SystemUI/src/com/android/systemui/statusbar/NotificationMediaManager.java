@@ -32,6 +32,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
 import android.hardware.display.DisplayManager;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
@@ -709,10 +711,12 @@ public class NotificationMediaManager implements Dumpable, TunerService.Tunable 
                 PlaybackState.STATE_PLAYING == getMediaControllerPlaybackState(mMediaController)) {
             switch (mAlbumArtFilter) {
                 case 0:
+                case 3:
                 default:
                     artworkDrawable = new BitmapDrawable(mBackdropBack.getResources(), bmp);
                     break;
                 case 1:
+                case 4:
                     artworkDrawable = new BitmapDrawable(mBackdropBack.getResources(),
                         ImageHelper.toGrayscale(bmp));
                     break;
@@ -721,14 +725,13 @@ public class NotificationMediaManager implements Dumpable, TunerService.Tunable 
                     artworkDrawable = new BitmapDrawable(ImageHelper.getColoredBitmap(aw,
                         Utils.getColorAttrDefaultColor(mContext, com.android.internal.R.attr.colorAccentPrimary)));
                     break;
-                case 3:
-                    artworkDrawable = new BitmapDrawable(mBackdropBack.getResources(),
-                        ImageHelper.getBlurredImage(mContext, bmp, 7.0f));
-                    break;
-                case 4:
-                    artworkDrawable = new BitmapDrawable(mBackdropBack.getResources(),
-                        ImageHelper.getGrayscaleBlurredImage(mContext, bmp, 7.0f));
-                    break;
+            }
+            if (artworkDrawable != null && mAlbumArtFilter >= 3) {
+                // note: as per testing this doesnt result to "boxing" since skia glass blur
+                // has fewer passes compared to gaussian and kawase filter
+                // using rendereffect with mirror shader somehow produces a blur similar to ios gradients 
+                final RenderEffect blurGradient = RenderEffect.createBlurEffect(4000, 4000, Shader.TileMode.MIRROR);
+                mBackdropBack.setRenderEffect(blurGradient);
             }
         }
         boolean hasMediaArtwork = artworkDrawable != null;

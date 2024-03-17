@@ -312,7 +312,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.android.internal.util.crdroid.PixelPropsUtils;
+import com.android.internal.util.PropImitationHooks;
 
 /**
  * System service for managing activities and their containers (task, displays,... ).
@@ -1780,7 +1780,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
     @Override
     public void startRecentsActivity(Intent intent, long eventTime,
             @Nullable IRecentsAnimationRunner recentsAnimationRunner) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("startRecentsActivity()");
         }
         final int callingPid = Binder.getCallingPid();
@@ -2001,7 +2001,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void setFocusedRootTask(int taskId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("setFocusedRootTask()");
         }
         ProtoLog.d(WM_DEBUG_FOCUS, "setFocusedRootTask: taskId=%d", taskId);
@@ -2025,7 +2025,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void setFocusedTask(int taskId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("setFocusedTask()");
         }
         final long callingId = Binder.clearCallingIdentity();
@@ -2040,7 +2040,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void focusTopTask(int displayId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("focusTopTask()");
         }
         final long callingId = Binder.clearCallingIdentity();
@@ -2146,7 +2146,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public Rect getTaskBounds(int taskId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("getTaskBounds()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -2443,7 +2443,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void moveTaskToRootTask(int taskId, int rootTaskId, boolean toTop) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("moveTaskToRootTask()");
         }
         synchronized (mGlobalLock) {
@@ -2481,7 +2481,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
      */
     @Override
     public void removeRootTasksInWindowingModes(int[] windowingModes) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("removeRootTasksInWindowingModes()");
         }
 
@@ -2497,7 +2497,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void removeRootTasksWithActivityTypes(int[] activityTypes) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("removeRootTasksWithActivityTypes()");
         }
 
@@ -2525,7 +2525,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public List<RootTaskInfo> getAllRootTaskInfos() {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("getAllRootTaskInfos()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -2540,7 +2540,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public RootTaskInfo getRootTaskInfo(int windowingMode, int activityType) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("getRootTaskInfo()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -2555,7 +2555,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public List<RootTaskInfo> getAllRootTaskInfosOnDisplay(int displayId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("getAllRootTaskInfosOnDisplay()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -2571,7 +2571,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
     @Override
     public RootTaskInfo getRootTaskInfoOnDisplay(int windowingMode, int activityType,
             int displayId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("getRootTaskInfoOnDisplay()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -2586,7 +2586,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void cancelRecentsAnimation(boolean restoreHomeRootTaskPosition) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("cancelRecentsAnimation()");
         }
         final long callingUid = Binder.getCallingUid();
@@ -2605,7 +2605,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void startSystemLockTaskMode(int taskId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("startSystemLockTaskMode");
         }
         // This makes inner call to look as if it was initiated by system.
@@ -2633,7 +2633,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
      */
     @Override
     public void stopSystemLockTaskMode() throws RemoteException {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("stopSystemLockTaskMode");
         }
         stopLockTaskModeInternal(null, true /* isSystemCaller */);
@@ -2924,7 +2924,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void resizeTask(int taskId, Rect bounds, int resizeMode) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("resizeTask()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -3130,7 +3130,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
     /** Unregister a task stack listener so that it stops receiving callbacks. */
     @Override
     public void unregisterTaskStackListener(ITaskStackListener listener) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("unregisterTaskStackListener()");
         }
         mTaskChangeNotificationController.unregisterTaskStackListener(listener);
@@ -3833,7 +3833,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void cancelTaskWindowTransition(int taskId) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("cancelTaskWindowTransition()");
         }
         final long ident = Binder.clearCallingIdentity();
@@ -4154,7 +4154,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
      */
     @Override
     public void clearLaunchParamsForPackages(List<String> packageNames) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("clearLaunchParamsForPackages");
         }
         synchronized (mGlobalLock) {
@@ -4166,7 +4166,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
     @Override
     public void onPictureInPictureStateChanged(PictureInPictureUiState pipState) {
-        if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+        if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
             enforceTaskPermission("onPictureInPictureStateChanged");
         }
         final Task rootPinnedTask = mRootWindowContainer.getDefaultTaskDisplayArea()
@@ -6622,7 +6622,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
 
         @Override
         public void startConfirmDeviceCredentialIntent(Intent intent, Bundle options) {
-            if (!PixelPropsUtils.shouldBypassTaskPermission(mContext)) {
+            if (!PropImitationHooks.shouldBypassTaskPermission(mContext)) {
                 enforceTaskPermission("startConfirmDeviceCredentialIntent");
             }
 

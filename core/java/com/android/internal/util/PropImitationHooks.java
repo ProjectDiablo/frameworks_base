@@ -63,12 +63,12 @@ public class PropImitationHooks {
     private static final String SPOOF_PIXEL_GPHOTOS = "persist.sys.pixelprops.gphotos";
     private static final String SPOOF_PIXEL_NETFLIX = "persist.sys.pixelprops.netflix";
 
-    private static final String sMainFP = "google/husky/husky:14/UQ1A.240205.004.B1/11318806:user/release-keys";
-    private static final String sMainModel = "Pixel 8 Pro";
-    private static final String sMainFpTablet = "google/tangorpro/tangorpro:14/UQ1A.240105.002/11129216:user/release-keys";
-    private static final String sMainModelTablet = "Pixel Tablet";
-    private static final String sSecondaryFP = "google/barbet/barbet:14/UQ1A.240205.002/11224170:user/release-keys";
-    private static final String sSecondaryModel = "Pixel 5a";
+    private static final String sMainFP = SystemProperties.get(PIHOOKS_PROP + "spoof_fingerprint");
+    private static final String sMainModel = SystemProperties.get(PIHOOKS_PROP + "spoof_model");
+    private static final String sMainFpTablet = SystemProperties.get(PIHOOKS_PROP + "spoof_tablet_fingerprint");
+    private static final String sMainModelTablet = SystemProperties.get(PIHOOKS_PROP + "spoof_tablet_model");
+    private static final String sSecondaryFP = SystemProperties.get(PIHOOKS_PROP + "spoof_secondary_fingerprint");
+    private static final String sSecondaryModel = SystemProperties.get(PIHOOKS_PROP + "spoof_secondary_model");
     private static final String sStockFp = SystemProperties.get("ro.vendor.build.fingerprint");
 
     private static final String PACKAGE_ARCORE = "com.google.ar.core";

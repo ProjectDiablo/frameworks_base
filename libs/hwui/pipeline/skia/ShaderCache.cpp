@@ -85,12 +85,16 @@ void ShaderCache::initShaderDiskCache(const void* identity, ssize_t size) {
     // or snapshot migration. Also, program binaries may not work well on some
     // desktop / laptop GPUs. Thus, disable the shader disk cache for emulator builds.
     if (!Properties::runningInEmulator && mFilename.length() > 0) {
-        mBlobCache.reset(new FileBlobCache(maxKeySize, maxValueSize, maxTotalSize, mFilename));
-        validateCache(identity, size);
-        mInitialized = true;
-        if (identity != nullptr && size > 0 && mIDHash.size()) {
-            set(&sIDKey, sizeof(sIDKey), mIDHash.data(), mIDHash.size());
-        }
+        std::thread deferredInitThread([this, identity, size]() {
+            std::lock_guard lock(mMutex);
+            mBlobCache.reset(new FileBlobCache(maxKeySize, maxValueSize, maxTotalSize, mFilename));
+            validateCache(identity, size);
+            mInitialized = true;
+            if (identity != nullptr && size > 0 && mIDHash.size()) {
+                set(&sIDKey, sizeof(sIDKey), mIDHash.data(), mIDHash.size());
+            }
+        });
+        deferredInitThread.detach();
     }
 }
 

@@ -149,17 +149,6 @@ public class PropImitationHooks {
         }
     }
 
-    private static final Set<String> extraPackageToSpoof = new HashSet<>(Arrays.asList(
-            "com.android.chrome",
-            "com.nhs.online.nhsonline",
-            "com.netflix.mediaclient"
-    ));
-    
-    private static final Set<String> secondarySpoof = new HashSet<>(Arrays.asList(
-            "com.google.android.tts",
-            "com.google.android.as"
-    ));
-
     private static final Set<String> packagesToChangeROG6 = new HashSet<>(Arrays.asList(
             "com.activision.callofduty.shooter",
     	    "com.ea.gp.fifamobile",
@@ -246,6 +235,8 @@ public class PropImitationHooks {
         final Resources res = appContext.getResources();
         if (res == null) return;
         final String[] EXCLUDED_PACKAGES = res.getStringArray(R.array.config_pihooks_exclude_list);
+        final String[] EXTRA_PACKAGES = res.getStringArray(R.array.config_pihooks_extra_spoof_list);
+        final String[] SECONDARY_SPOOF_PACKAGES = res.getStringArray(R.array.config_pihooks_secondary_model_spoof_list);
         final boolean sIsTablet = isDeviceTablet(appContext);
         final String sMainModelSpoof = sIsTablet ? sMainModelTablet : sMainModel;
         final String sMainFpSpoof = sIsTablet ? sMainFpTablet : sMainFP;
@@ -259,8 +250,8 @@ public class PropImitationHooks {
         sisGoogleApp = packageName.toLowerCase().contains("google");
         sIsGoogleProcess = processName.toLowerCase().contains("google");
         sIsExcluded = Arrays.asList(EXCLUDED_PACKAGES).contains(packageName);
-        final boolean sIsExtra = extraPackageToSpoof.contains(packageName);
-        final boolean sIsSecondary = secondarySpoof.contains(packageName);
+        final boolean sIsExtra = Arrays.asList(EXTRA_PACKAGES).contains(packageName);
+        final boolean sIsSecondary = Arrays.asList(SECONDARY_SPOOF_PACKAGES).contains(packageName);
         if (((sisGoogleApp || sIsGoogleProcess) && !sIsExcluded || sIsExtra) && !sIsSecondary) {
             dlog("Spoofing build for Google Services");
             setPropValue("TIME", System.currentTimeMillis());

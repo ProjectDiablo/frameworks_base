@@ -25,6 +25,8 @@
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string-array name="config_pihooks_exclude_list" translatable="false"/>
+    <string-array name="config_pihooks_extra_spoof_list" translatable="false"/>
+    <string-array name="config_pihooks_secondary_model_spoof_list" translatable="false"/>
     <!-- Do not translate. Defines the slots for the right-hand side icons.  That is to say, the
          icons in the status bar that are not notifications. -->
     <string-array name="config_statusBarIcons">

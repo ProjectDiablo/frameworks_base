@@ -721,7 +721,7 @@ public class ActivityManagerService extends IActivityManager.Stub
             ? new ActivityManagerProcLock() : mGlobalLock;
 
     // Whether we should use SCHED_FIFO for UI and RenderThreads.
-    final boolean mUseFifoUiScheduling;
+    final boolean mUseFifoUiScheduling = true;
 
     // Use an offload queue for long broadcasts, e.g. BOOT_COMPLETED.
     // For simplicity, since we statically declare the size of the array of BroadcastQueues,
@@ -2484,7 +2484,6 @@ public class ActivityManagerService extends IActivityManager.Stub
         mUgmInternal = LocalServices.getService(UriGrantsManagerInternal.class);
         mInternal = new LocalService();
         mPendingStartActivityUids = new PendingStartActivityUids();
-        mUseFifoUiScheduling = false;
         mEnableOffloadQueue = false;
         mEnableModernQueue = false;
         mBroadcastQueues = new BroadcastQueue[0];
@@ -2591,8 +2590,6 @@ public class ActivityManagerService extends IActivityManager.Stub
                 mHandlerThread.getLooper(), mUserController, mConstants);
 
         mAppRestrictionController = new AppRestrictionController(mContext, this);
-
-        mUseFifoUiScheduling = SystemProperties.getInt("sys.use_fifo_ui", 0) != 0;
 
         mTrackingAssociations = "1".equals(SystemProperties.get("debug.track-associations"));
         mIntentFirewall = new IntentFirewall(new IntentFirewallInterface(), mHandler);

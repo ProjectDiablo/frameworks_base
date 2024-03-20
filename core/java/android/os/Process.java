@@ -1107,30 +1107,6 @@ public class Process {
             throws IllegalArgumentException, SecurityException;
 
     /**
-    * @hide
-    */
-    public static final native void setUidPrio(int pid, int group)
-            throws IllegalArgumentException, SecurityException;
-
-    /**
-    * @hide
-    */
-    public static final native void putThreadInRoot(int tid)
-            throws IllegalArgumentException, SecurityException;
-
-    /**
-    * @hide
-    */
-    public static final native void putProc(int pid)
-            throws IllegalArgumentException, SecurityException;
-
-    /**
-    * @hide
-    */
-    public static final native int uidFromPid(int pid)
-            throws IllegalArgumentException, SecurityException;
-
-    /**
      * Freeze or unfreeze the specified process.
      *
      * @param pid Identifier of the process to freeze or unfreeze.
@@ -1694,12 +1670,4 @@ public class Process {
     }
 
     private static native int nativePidFdOpen(int pid, int flags) throws ErrnoException;
-    
-    /**
-     * @hide
-     */
-    public static boolean isAppRegular(int pid) {
-        int uid = uidFromPid(pid);
-        return UserHandle.isApp(uid) || UserHandle.isIsolated(uid);
-    }
 }

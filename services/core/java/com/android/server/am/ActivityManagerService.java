@@ -124,7 +124,6 @@ import static android.os.Process.readProcFile;
 import static android.os.Process.sendSignal;
 import static android.os.Process.setThreadPriority;
 import static android.os.Process.setThreadScheduler;
-import static android.os.Process.setUidPrio;
 import static android.provider.Settings.Global.ALWAYS_FINISH_ACTIVITIES;
 import static android.provider.Settings.Global.DEBUG_APP;
 import static android.provider.Settings.Global.WAIT_FOR_DEBUGGER;
@@ -720,6 +719,9 @@ public class ActivityManagerService extends IActivityManager.Stub
      */
     final ActivityManagerGlobalLock mProcLock = ENABLE_PROC_LOCK
             ? new ActivityManagerProcLock() : mGlobalLock;
+
+    // Whether we should use SCHED_FIFO for UI and RenderThreads.
+    final boolean mUseFifoUiScheduling;
 
     // Use an offload queue for long broadcasts, e.g. BOOT_COMPLETED.
     // For simplicity, since we statically declare the size of the array of BroadcastQueues,
@@ -2482,6 +2484,7 @@ public class ActivityManagerService extends IActivityManager.Stub
         mUgmInternal = LocalServices.getService(UriGrantsManagerInternal.class);
         mInternal = new LocalService();
         mPendingStartActivityUids = new PendingStartActivityUids();
+        mUseFifoUiScheduling = false;
         mEnableOffloadQueue = false;
         mEnableModernQueue = false;
         mBroadcastQueues = new BroadcastQueue[0];
@@ -2588,6 +2591,8 @@ public class ActivityManagerService extends IActivityManager.Stub
                 mHandlerThread.getLooper(), mUserController, mConstants);
 
         mAppRestrictionController = new AppRestrictionController(mContext, this);
+
+        mUseFifoUiScheduling = SystemProperties.getInt("sys.use_fifo_ui", 0) != 0;
 
         mTrackingAssociations = "1".equals(SystemProperties.get("debug.track-associations"));
         mIntentFirewall = new IntentFirewall(new IntentFirewallInterface(), mHandler);
@@ -4479,52 +4484,6 @@ public class ActivityManagerService extends IActivityManager.Stub
         return didSomething;
     }
 
-    final void updateCgroupPrioLocked(int pid) {
-        if (!Process.isAppRegular(pid)) {
-            return;
-        }
-        final int DEFAULT_CPU_SHARES = 1024; // 5%
-        final int TOP_APP_CPU_SHARES = 4096; // 100%
-        final int procUid = Process.getUidForPid(pid);
-        final String uidPackage = mContext.getPackageManager().getNameForUid(procUid);
-        int cpuShares = DEFAULT_CPU_SHARES;
-        int prio = Process.THREAD_PRIORITY_DEFAULT;
-        int policy = Process.SCHED_OTHER;
-        boolean isForegroundProcess = false;
-        boolean isBgProcess = false;
-        boolean isDrainingServices = uidPackage != null && uidPackage.toLowerCase().contains("google");
-        synchronized (mProcLock) {
-            ProcessRecord proc;
-            synchronized (mPidsSelfLocked) {
-                proc = mPidsSelfLocked.get(pid);
-            }
-            if (proc == null || proc.mState == null) return;
-            final int schedGroup = proc.mState.getCurrentSchedulingGroup();
-            switch (schedGroup) {
-                case ProcessList.SCHED_GROUP_BACKGROUND:
-                case ProcessList.SCHED_GROUP_RESTRICTED:
-                    isBgProcess = true;
-                    cpuShares /= 2;
-                    break;
-                case ProcessList.SCHED_GROUP_TOP_APP:
-                    cpuShares = TOP_APP_CPU_SHARES;
-                    break;
-                case ProcessList.SCHED_GROUP_TOP_APP_BOUND:
-                    isForegroundProcess = true;
-                    break;
-                default:
-                    break;
-            }
-            if (isAppForeground(procUid) || isForegroundProcess) {
-                cpuShares *= 2;
-            }
-            if (isDrainingServices && isBgProcess) {
-                cpuShares /= 4;
-            }
-        }
-        Process.setUidPrio(pid, cpuShares);
-    }
-
     @GuardedBy("this")
     void handleProcessStartOrKillTimeoutLocked(ProcessRecord app, boolean isKillTimeout) {
         final int pid = app.getPid();
@@ -4681,10 +4640,6 @@ public class ActivityManagerService extends IActivityManager.Stub
         // process, clean it up now.
         if (app.getThread() != null) {
             handleAppDiedLocked(app, pid, true, true, false /* fromBinderDied */);
-        }
-        
-        if (Process.isAppRegular(pid)) {
-            Process.putProc(pid);
         }
 
         // Tell the process all about itself.
@@ -7915,10 +7870,9 @@ public class ActivityManagerService extends IActivityManager.Stub
      *
      * @return {@code true} if this succeeded.
      */
-    public static boolean scheduleAsFifoPriority(int tid, int prio, boolean suppressLogs) {
+    public static boolean scheduleAsFifoPriority(int tid, boolean suppressLogs) {
         try {
-            Process.putThreadInRoot(tid);
-            Process.setThreadScheduler(tid, Process.SCHED_FIFO | Process.SCHED_RESET_ON_FORK, prio);
+            Process.setThreadScheduler(tid, Process.SCHED_FIFO | Process.SCHED_RESET_ON_FORK, 1);
             return true;
         } catch (IllegalArgumentException e) {
             if (!suppressLogs) {
@@ -7957,7 +7911,17 @@ public class ActivityManagerService extends IActivityManager.Stub
                 // promote to FIFO now
                 if (proc.mState.getCurrentSchedulingGroup() == ProcessList.SCHED_GROUP_TOP_APP) {
                     if (DEBUG_OOM_ADJ) Slog.d("UI_FIFO", "Promoting " + tid + "out of band");
-                   setThreadPriority(proc.getRenderThreadTid(), THREAD_PRIORITY_TOP_APP_BOOST);
+                    if (mUseFifoUiScheduling) {
+                        setThreadScheduler(proc.getRenderThreadTid(),
+                                SCHED_FIFO | SCHED_RESET_ON_FORK, 1);
+                    } else {
+                        setThreadPriority(proc.getRenderThreadTid(), THREAD_PRIORITY_TOP_APP_BOOST);
+                    }
+                }
+            } else {
+                if (DEBUG_OOM_ADJ) {
+                    Slog.d("UI_FIFO", "Didn't set thread from setRenderThread? "
+                            + "PID: " + pid + ", TID: " + tid + " FIFO: " + mUseFifoUiScheduling);
                 }
             }
         }

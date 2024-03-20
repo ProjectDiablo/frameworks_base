@@ -3286,11 +3286,9 @@ public final class ProcessList {
                 mProcessNames.remove(name, uid);
             }
             if (record != null) {
-                final int pid = record.getPid();
                 final UidRecord uidRecord = record.getUidRecord();
                 if (uidRecord != null) {
                     uidRecord.removeProcess(record);
-                    mService.updateCgroupPrioLocked(pid);
                     if (uidRecord.getNumOfProcs() == 0) {
                         // No more processes using this uid, tell clients it is gone.
                         if (DEBUG_UID_OBSERVERS) {

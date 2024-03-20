@@ -350,7 +350,7 @@ final class VrController {
 
         if (newTid > 0) {
             mVrRenderThreadTid = newTid;
-            ActivityManagerService.scheduleAsFifoPriority(mVrRenderThreadTid, 1, suppressLogs);
+            ActivityManagerService.scheduleAsFifoPriority(mVrRenderThreadTid, suppressLogs);
         }
         return mVrRenderThreadTid;
     }

@@ -132,6 +132,9 @@ constructor(
         internal val QS_SHOW_BATTERY_PERCENT =
             "system:" + Settings.System.QS_SHOW_BATTERY_PERCENT
 
+        internal val STATUS_BAR_CUSTOM_HEADER =
+            "system:" + Settings.System.STATUS_BAR_CUSTOM_HEADER
+
         private fun Int.stateToString() =
             when (this) {
                 QQS_HEADER_CONSTRAINT -> "QQS Header"
@@ -149,6 +152,8 @@ constructor(
              context.contentResolver, Settings.System.STATUS_BAR_BATTERY_STYLE, 0, UserHandle.USER_CURRENT)
     private var qsBatteryStyle = Settings.System.getIntForUser(
              context.contentResolver, Settings.System.QS_BATTERY_STYLE, -1, UserHandle.USER_CURRENT)
+    private var qsHeaderImageActive = Settings.System.getIntForUser(
+             context.contentResolver, Settings.System.STATUS_BAR_CUSTOM_HEADER, 0, UserHandle.USER_CURRENT) != 0
 
     private lateinit var iconManager: StatusBarIconController.TintedIconManager
     private lateinit var carrierIconSlots: List<String>
@@ -328,6 +333,15 @@ constructor(
         batteryIcon.setBatteryPercent(qsBatteryPercent)
         updateBatteryResources(true)
     }
+    
+    fun updateQsHeader() {
+        val fillColor = if (qsHeaderImageActive) Color.WHITE 
+            else Utils.getColorAttrDefaultColor(context, android.R.attr.textColorPrimary)
+        iconManager.setTint(fillColor)
+        updateBatteryResources(true)
+        clock?.setTextColor(fillColor)
+        date?.setTextColor(fillColor)
+    }
 
     override fun onInit() {
         variableDateViewControllerFactory.create(date as VariableDateView).init()
@@ -368,8 +382,16 @@ constructor(
                 updateQsBatteryStyle()
             }
         }, QS_SHOW_BATTERY_PERCENT)
+        
+        tunerService.addTunable(object : TunerService.Tunable {
+            override fun onTuningChanged(key: String?, value: String?) {
+                qsHeaderImageActive = TunerService.parseInteger(value, 0) != 0
+                updateQsHeader()
+            }
+        }, STATUS_BAR_CUSTOM_HEADER)
 
         updateQsBatteryStyle()
+        updateQsHeader()
     }
 
     override fun onViewAttached() {
@@ -400,6 +422,7 @@ constructor(
         statusBarIconController.addIconGroup(iconManager)
         nextAlarmController.addCallback(nextAlarmCallback)
         updateResources()
+        updateQsHeader()
         systemIcons.setOnHoverListener(
             statusOverlayHoverListenerFactory.createListener(systemIcons)
         )
@@ -595,29 +618,27 @@ constructor(
         header.setPadding(padding, header.paddingTop, padding, header.paddingBottom)
         updateQQSPaddings()
 
-        val fillColor = Utils.getColorAttrDefaultColor(context, android.R.attr.textColorPrimary)
+        val fillColor = if (qsHeaderImageActive) Color.WHITE else Utils.getColorAttrDefaultColor(context, android.R.attr.textColorPrimary)
         iconManager.setTint(fillColor)
         updateBatteryResources(false)
     }
 
     private fun updateBatteryResources(forceUpdate: Boolean) {
-        val textColor = Utils.getColorAttrDefaultColor(context, android.R.attr.textColorPrimary)
-        val colorStateList = Utils.getColorAttr(context, android.R.attr.textColorPrimary)
+        val textColor = if (qsHeaderImageActive) Color.WHITE else Utils.getColorAttrDefaultColor(context, android.R.attr.textColorPrimary)
+        val colorStateList = ColorStateList.valueOf(textColorPrimary)
+
         if (textColor != textColorPrimary || forceUpdate) {
-            var textColorSecondary = Utils.getColorAttrDefaultColor(context,
-                    android.R.attr.textColorSecondary)
+            var textColorSecondary = if (qsHeaderImageActive) Color.parseColor("#CCCCCC") else Utils.getColorAttrDefaultColor(context, android.R.attr.textColorSecondary)
             val currentBatteryStyle = batteryIcon.getBatteryStyle()
             if (currentBatteryStyle == 1 || currentBatteryStyle == 2 || currentBatteryStyle == 3) {
-                textColorSecondary = Utils.getColorAttrDefaultColor(header.context, android.R.attr.textColorHint)
+                if (qsHeaderImageActive) Color.parseColor("#EEEEEE") else textColorSecondary = Utils.getColorAttrDefaultColor(header.context, android.R.attr.textColorHint)
             }
             textColorPrimary = textColor
-            if (iconManager != null) {
-                iconManager.setTint(textColor)
-            }
-            clock.setTextColor(textColorPrimary)
-            date.setTextColor(textColorPrimary)
-            mShadeCarrierGroup.updateColors(textColorPrimary, colorStateList)
-            batteryIcon.updateColors(textColorPrimary, textColorSecondary, textColorPrimary)
+            iconManager?.setTint(textColorPrimary)
+            clock?.setTextColor(textColorPrimary)
+            date?.setTextColor(textColorPrimary)
+            mShadeCarrierGroup?.updateColors(textColorPrimary, colorStateList)
+            batteryIcon?.updateColors(textColorPrimary, textColorSecondary, textColorPrimary)
         }
     }
 
